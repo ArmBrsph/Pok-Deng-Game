@@ -9,7 +9,7 @@ const prompt = async (message) => {
     rl.close();
     return answer;
 };
-async function GenDesk() {
+function GenDesk() {
     const runNumber = [
         "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "King", "Queen", "Jack"
     ]
@@ -44,6 +44,49 @@ async function dealCardAndCalPoint(shuffled, player) {
     point = point % 10
     return [shuffled.slice(2), point]
 }
+async function calPoint(cards) {
+    let point = 0
+    cards.forEach(el => {
+        const number = el.split('-')[1]
+        switch (number) {
+            case "Ace":
+                point += 1
+                break;
+            case "King":
+            case "Queen":
+            case "Jack":
+                point += 10
+                break;
+            default:
+                point += Number(number)
+                break;
+        }
+    })
+    point = point % 10
+    return point
+}
+async function dealCardAndCalPointV2(shuffled) {
+    const numPlayer = 3
+    const total_player = { player1: [], player2: [], player3: [] }
+    shuffled.forEach((fl, index) => {
+        const to = index % 3
+        switch (to) {
+            case 0:
+                total_player.player1.push(fl)
+                break;
+
+            default:
+                break;
+        }
+    })
+    const player = [shuffled[0], shuffled[2]]
+    console.log(`player got ${player.join(', ')}`);
+    const dealer = [shuffled[1], shuffled[3]]
+    console.log(`dealer got ${dealer.join(', ')}`);
+    const myPoint = await calPoint(player)
+    const dealerPoint = await calPoint(dealer)
+    return { myPoint, dealerPoint }
+}
 async function shuffledArray(desks) {
     let curIndex = desks.length
     while (curIndex !== 0) {
@@ -56,11 +99,9 @@ async function shuffledArray(desks) {
 }
 async function dealCardToPlayer(desks) {
     let shuffled = await shuffledArray(desks)
-    let myPoint = 0;
-    let dealerPoint = 0;
-    [shuffled, myPoint] = await dealCardAndCalPoint(shuffled, "You");
-    [shuffled, dealerPoint] = await dealCardAndCalPoint(shuffled, "The dealer");
-    return { myPoint, dealerPoint }
+    // [shuffled, myPoint] = await dealCardAndCalPoint(shuffled, "You");
+    // [shuffled, dealerPoint] = await dealCardAndCalPoint(shuffled, "The dealer");
+    return await dealCardAndCalPointV2(shuffled)
 }
 async function checkPoint(my, deal, bets) {
     if (my > deal) {
@@ -80,7 +121,7 @@ async function playGame(desks, myBets) {
     return earned
 }
 async function startGame() {
-    const desks = await GenDesk()
+    const desks = GenDesk()
     let goAhead = "Yes"
     console.log('Please put your bet');
     const myBets = Number(await prompt(""));
